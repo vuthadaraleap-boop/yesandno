@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Do You Love Me?</title>
+  <style>
+    /* ===========================
+       General styles
+       =========================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #52cce8, #e3f6ff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+    }
+
+    h1 {
+      color: #ff6392;
+      margin-bottom: 20px;
+    }
+
+    .gif-area {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 60px;
+      margin-bottom: 20px;
+    }
+
+    .gif {
+      width: 220px;
+      border-radius: 10px;
+    }
+
+    button {
+      padding: 12px 28px;
+      border-radius: 30px;
+      border: none;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      margin: 0 15px;
+      transition: transform 0.2s;
+    }
+
+    button:hover {
+      transform: scale(1.1);
+    }
+
+    #yesBtn { background: #07c67b; }
+    #noBtn { background: #ff4b5c; }
+    #exitBtn { background: #ff6392; }
+
+    .love-screen { display: none; }
+
+    /* Roses */
+    .rose-left, .rose-right {
+      width: 500px;
+      height: 500px;
+      opacity: 0;
+      transform: scale(0);
+      position: relative;
+    }
+
+        /* Floating animation (longer) */
+    @keyframes roseFloat {
+      0% { transform: scale(0) translateY(0); opacity: 0; }
+      30% { transform: scale(1.2) translateY(-10px); opacity: 1; }
+      70% { transform: scale(1) translateY(-40px); opacity: 1; }
+      100% { transform: scale(1) translateY(-60px); opacity: 0.6; } /* stays partially visible */
+    }
+
+    .rose-left.pop, .rose-right.pop {
+      animation: roseFloat 5s ease forwards; /* increased duration to 5s */
+    }
+
+    .pop {
+      animation: roseFloat 2s ease forwards;
+    }
+    .buttons {
+  position: relative; /* container for NO button movement */
+  height: 100px;      /* reserve space for buttons */
+}
+
+#noBtn {
+  position: absolute; /* allows free movement */
+  top: 10px;          /* initial position */
+  left: 10px;         /* initial position */
+  transition: top 0.3s ease, left 0.3s ease, transform 0.2s ease;
+}
+
+#yesBtn {
+  position: relative; /* stays in normal flow */
+  top: 10px;          /* initial position */
+  left: 60px; 
+}
+
+
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Question Screen -->
+    <div class="question-screen" id="question">
+      <img src="bubuGIF.gif" alt="cute gif" class="gif" />
+      <h1>Do You Love Me Baby Kagnchana?</h1>
+      <div class="buttons">
+        <button id="noBtn">NO</button>
+        <button id="yesBtn">YES</button>
+      </div>
+    </div>
+
+    <!-- Love Screen -->
+    <div class="love-screen" id="love">
+      <div class="gif-area">
+        <img src="https://cdn.store-assets.com/s/761122/i/52940451.png" alt="rose left" class="rose-left" id="leftRose" />
+        <img src="bubu_rubGIF.gif" alt="love gif" class="gif" />
+        <img src="https://cdn.store-assets.com/s/761122/i/52940451.png" alt="rose right" class="rose-right" id="rightRose" />
+      </div>
+      <h1>Yay! ❤️ I love you too Baby Kagnchana!</h1>
+    </div>
+  </div>
+
+  <script>
+  const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+const question = document.getElementById("question");
+const love = document.getElementById("love");
+const exitBtn = document.getElementById("exitBtn");
+const leftRose = document.getElementById("leftRose");
+const rightRose = document.getElementById("rightRose");
+
+let noWidth = 120;
+let noHeight = 60;
+
+// Store NO button original position
+const container = document.querySelector('.buttons');
+const originalPos = { top: 10, left: 10 }; // initial position
+
+let returnTimeout;
+
+// YES → show love screen and float roses
+yesBtn.addEventListener("click", () => {
+  question.style.display = "none";
+  love.style.display = "block";
+
+  leftRose.classList.add("pop");
+  setTimeout(() => {
+    rightRose.classList.add("pop");
+  }, 300);
+
+  yesBtn.textContent = "💙 Yes! Forever!";
+  setTimeout(() => {
+    yesBtn.textContent = "Yes, I will! 💍";
+  }, 2500);
+});
+
+function moveNoButton() {
+  clearTimeout(returnTimeout); // stop any return while moving
+
+  const containerRect = container.getBoundingClientRect();
+  const btnRect = noBtn.getBoundingClientRect();
+  const yesRect = yesBtn.getBoundingClientRect();
+
+  const maxX = containerRect.width - btnRect.width;
+  const maxY = containerRect.height - btnRect.height;
+
+  let randomX, randomY, distance;
+  let attempts = 0;
+
+  do {
+    randomX = Math.random() * maxX;
+    randomY = Math.random() * maxY;
+
+    const noCenterX = randomX + btnRect.width / 2;
+    const noCenterY = randomY + btnRect.height / 2;
+    const yesCenterX = yesRect.left - containerRect.left + yesRect.width / 2;
+    const yesCenterY = yesRect.top - containerRect.top + yesRect.height / 2;
+
+    distance = Math.hypot(noCenterX - yesCenterX, noCenterY - yesCenterY);
+    attempts++;
+    if (attempts > 100) break; // prevent infinite loop
+  } while (distance < 100); // maintain distance from YES
+
+  noBtn.style.left = `${randomX}px`;
+  noBtn.style.top = `${randomY}px`;
+
+  // Return NO button to original position after 1 seconds of inactivity
+  returnTimeout = setTimeout(() => {
+    noBtn.style.left = `${originalPos.left}px`;
+    noBtn.style.top = `${originalPos.top}px`;
+  }, 200);
+}
+
+// Make NO button run away on hover, focus, or click
+["mouseenter", "focus", "click", "touchstart"].forEach(evt => {
+  noBtn.addEventListener(evt, moveNoButton);
+});
+
+
+  </script>
+</body>
+</html>
