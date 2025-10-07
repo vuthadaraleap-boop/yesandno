@@ -23,9 +23,16 @@
       color: white; font-size: 1.2rem; cursor: pointer;
       margin: 0 15px; transition: transform 0.2s;
     }
-    button:hover { transform: scale(1.1); }
-    #yesBtn { background: #07c67b; position: relative; top: 10px; left: 60px; }
-    #noBtn { background: #ff4b5c; position: absolute; top: 10px; left: 130px; transition: top 0.3s ease, left 0.3s ease, transform 0.2s ease; }
+    .buttons {
+      display: flex;
+      justify-content: space-between; /* ensures NO is left, YES is right */
+      align-items: center;
+      height: 80px;
+      padding: 0 20px; /* add gap from edges */
+      position: relative;
+    }
+    #noBtn { background: #ff4b5c; position: relative; transition: transform 0.2s; }
+    #yesBtn { background: #07c67b; position: relative; transition: transform 0.2s; }
     .love-screen { display: none; }
     .rose-left, .rose-right { width: 500px; height: 500px; opacity: 0; transform: scale(0); position: relative; }
     @keyframes roseFloat {
@@ -35,7 +42,35 @@
       100% { transform: scale(1) translateY(-60px); opacity: 0.6; }
     }
     .rose-left.pop, .rose-right.pop { animation: roseFloat 5s ease forwards; }
-    .buttons { position: relative; height: 100px; }
+
+    /* ======= Blue Heart Animation ======= */
+    .heart {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #00bfff;
+      transform: rotate(-45deg);
+      left: 50%;
+      top: 50%;
+      pointer-events: none;
+      animation: floatHeart 1s forwards;
+    }
+    .heart::before,
+    .heart::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #00bfff;
+      border-radius: 50%;
+    }
+    .heart::before { top: -10px; left: 0; }
+    .heart::after { left: 10px; top: 0; }
+    @keyframes floatHeart {
+      0% { transform: translate(-50%, -50%) scale(1) rotate(-45deg); opacity: 1; }
+      50% { transform: translate(-50%, -150px) scale(1.2) rotate(-45deg); opacity: 0.7; }
+      100% { transform: translate(-50%, -250px) scale(0) rotate(-45deg); opacity: 0; }
+    }
   </style>
 </head>
 <body>
@@ -67,12 +102,10 @@
     const leftRose = document.getElementById("leftRose");
     const rightRose = document.getElementById("rightRose");
 
-    // Store NO button original position
     const container = document.querySelector('.buttons');
-    const originalPos = { top: 10, left: 130 }; // match CSS initial position
+    const originalPos = { top: 10, left: 130 };
     let returnTimeout;
 
-    // YES → show love screen and float roses
     yesBtn.addEventListener("click", () => {
       question.style.display = "none";
       love.style.display = "block";
@@ -80,21 +113,29 @@
       setTimeout(() => { rightRose.classList.add("pop"); }, 300);
       yesBtn.textContent = "💙 Yes! Forever!";
       setTimeout(() => { yesBtn.textContent = "Yes, I will! 💍"; }, 2500);
+
+      // ===== Add multiple floating hearts =====
+      for (let i = 0; i < 5; i++) {
+        const heart = document.createElement("div");
+        heart.classList.add("heart");
+        heart.style.left = `${yesBtn.offsetLeft + yesBtn.offsetWidth/2 + (Math.random()*60-30)}px`;
+        heart.style.top = `${yesBtn.offsetTop}px`;
+        container.appendChild(heart);
+        setTimeout(() => heart.remove(), 1000);
+      }
     });
 
     function moveNoButton() {
-      clearTimeout(returnTimeout); // stop return while moving
+      clearTimeout(returnTimeout);
 
       const containerRect = container.getBoundingClientRect();
       const btnRect = noBtn.getBoundingClientRect();
       const yesRect = yesBtn.getBoundingClientRect();
-
       const maxX = containerRect.width - btnRect.width;
       const maxY = containerRect.height - btnRect.height;
 
       let randomX, randomY, distance;
       let attempts = 0;
-
       do {
         randomX = Math.random() * maxX;
         randomY = Math.random() * maxY;
@@ -107,15 +148,19 @@
         distance = Math.hypot(noCenterX - yesCenterX, noCenterY - yesCenterY);
         attempts++;
         if (attempts > 100) break;
-      } while (distance < 100); // stay away from YES
+      } while (distance < 100);
 
       noBtn.style.left = `${randomX}px`;
       noBtn.style.top = `${randomY}px`;
 
-      // Return NO button to original position after 2 seconds
+      // Return NO button faster (0.1s)
       returnTimeout = setTimeout(() => {
+        noBtn.style.transition = "all 0.1s ease";
         noBtn.style.left = `${originalPos.left}px`;
         noBtn.style.top = `${originalPos.top}px`;
+        setTimeout(() => {
+          noBtn.style.transition = "top 0.3s ease, left 0.3s ease, transform 0.2s ease";
+        }, 100);
       }, 200);
     }
 
